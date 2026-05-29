@@ -7,7 +7,7 @@ try:
     from qdrant_client import QdrantClient
     from qdrant_client.http import models as rest
     QDRANT_AVAILABLE = True
-except Exception:
+except Exception as exc:
     QDRANT_AVAILABLE = False
 
 logger = get_logger("memory.vector_store")
@@ -70,7 +70,7 @@ class QdrantVectorStore:
         try:
             self.client.upload_collection(collection_name=collection, points=points, wait=True)
             return True
-        except Exception:
+        except Exception as exc:
             logger.exception("Qdrant upsert failed for %s", collection)
             logger.debug("Failed vectors=%s", vectors)
             return False

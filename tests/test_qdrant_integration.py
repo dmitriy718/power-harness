@@ -15,7 +15,7 @@ def test_qdrant_upsert_and_search():
             r = requests.get(f"{url}/api/v1/collections")
             if r.status_code != 200:
                 pytest.skip("Qdrant not reachable on default URL")
-        except Exception:
+        except requests.RequestException:
             pytest.skip("Qdrant not reachable on default URL")
 
     store = get_vector_store(url=url, dim=4)
@@ -26,7 +26,7 @@ def test_qdrant_upsert_and_search():
         {"id": 2, "vector": [0.0, 1.0, 0.0, 0.0], "payload": {"text": "two"}},
     ]
     ok = store.upsert(col, vectors)
-    assert ok is True
+    assert ok == True
 
     res = store.search(col, [1.0, 0.0, 0.0, 0.0], top_k=1)
     assert len(res) >= 1

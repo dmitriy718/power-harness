@@ -64,11 +64,11 @@ async def create_task(payload: Dict[str, Any], background_tasks: BackgroundTasks
     try:
         run_task.apply_async(args=(spec,), task_id=uid)
         update_task_status(uid, "queued")
-    except Exception:
+    except Exception as exc:
         logger.exception("Failed to enqueue task")
         update_task_status(uid, "failed")
         add_task_event(uid, "task_enqueue_failed", {"error": "enqueue failed"})
-        raise HTTPException(status_code=500, detail="failed to enqueue")
+        raise HTTPException(status_code=500, detail=str(exc))
     return {"task_id": uid, "status": "queued"}
 
 
@@ -81,7 +81,8 @@ async def read_task(task_id: str):
     try:
         res = celery_app.AsyncResult(task_id)
         state = res.state
-    except Exception:
+    except Exception as exc:
+        logger.exception("Failed to retrieve Celery state")
         state = t.get("status")
     return {"task": t, "state": state}
 
@@ -97,11 +98,11 @@ async def resume_task(task_id: str):
         run_task.apply_async(args=(spec,), task_id=task_id)
         update_task_status(task_id, "resumed")
         add_task_event(task_id, "task_resumed", {"spec": spec})
-    except Exception:
+    except Exception as exc:
         logger.exception("Failed to resume task")
         update_task_status(task_id, "failed")
         add_task_event(task_id, "task_resume_failed", {"error": "resume failed"})
-        raise HTTPException(status_code=500, detail="failed to resume")
+        raise HTTPException(status_code=500, detail=str(exc))
     return {"task_id": task_id, "status": "resumed"}
 
 
@@ -110,9 +111,9 @@ async def cancel_task(task_id: str):
     try:
         celery_app.control.revoke(task_id, terminate=True)
         add_task_event(task_id, "task_cancelled", {"revoked": True})
-    except Exception:
+    except Exception as exc:
         logger.exception("Revoke failed")
-        add_task_event(task_id, "task_cancel_failed", {"error": "revoke failed"})
+        add_task_event(task_id, "task_cancel_failed", {"error": str(exc)})
     update_task_status(task_id, "cancelled")
     return {"task_id": task_id, "status": "cancelled"}
 
@@ -181,7 +182,7 @@ async def tools_run(payload: Dict[str, Any]):
         try:
             if task_uuid:
                 add_tool_call(task_uuid, name, str({"args": args, "kwargs": kwargs}), str(out))
-        except Exception:
+        except Exception as exc:
             logger.exception("audit write failed")
         return {"ok": True, "output": out}
     except KeyError:
@@ -189,9 +190,9 @@ async def tools_run(payload: Dict[str, Any]):
     except PermissionError as e:
         logger.warning("tool approval required: %s", name)
         raise HTTPException(status_code=403, detail=str(e))
-    except Exception as e:
+    except Exception as exc:
         logger.exception("tool run failed")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(exc))
 
 
 @app.get("/tools/list")
@@ -223,9 +224,9 @@ async def workflow(payload: Dict[str, Any]):
             raise HTTPException(status_code=404, detail="tool not found")
         except PermissionError as e:
             raise HTTPException(status_code=403, detail=str(e))
-        except Exception as e:
+        except Exception as exc:
             logger.exception("workflow tool failed")
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=500, detail=str(exc))
     try:
         reply = agent.respond(prompt, project_id=project_id)
     except Exception as exc:
@@ -249,9 +250,9 @@ async def embeddings_index(payload: Dict[str, Any]):
 
         ok = index_texts(collection, texts, ids=ids, project_id=project_id)
         return {"ok": bool(ok)}
-    except Exception as e:
+    except Exception as exc:
         logger.exception("embeddings index failed")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(exc))
 
 
 @app.post("/embeddings/query")
@@ -266,7 +267,7 @@ async def embeddings_query(payload: Dict[str, Any]):
 
         res = query_similar(collection, query, top_k=top_k)
         return {"results": res}
-    except Exception as e:
+    except Exception as exc:
         logger.exception("embeddings query failed")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(exc))
 

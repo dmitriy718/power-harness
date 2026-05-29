@@ -37,7 +37,7 @@ if __name__ == "__main__":
 # Ensure DB initialized on import (helps tests and first-run)
 try:
     init_db()
-except Exception:
+except Exception as exc:
     pass
 
 

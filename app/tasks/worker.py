@@ -15,7 +15,7 @@ def run_task(self, spec: dict):
     try:
         update_task_status(task_id, "running")
         add_task_event(task_id, "task_started", {"spec": spec})
-    except Exception:
+    except Exception as exc:
         logger.exception("failed to mark running")
     # simple simulated long-running work with checkpoints
     steps = int(spec.get("steps", 3)) if isinstance(spec, dict) else 3
@@ -28,7 +28,7 @@ def run_task(self, spec: dict):
     try:
         update_task_status(task_id, "completed")
         add_task_event(task_id, "task_completed", {"result": "success"})
-    except Exception:
+    except Exception as exc:
         logger.exception("failed to mark completed")
     return {"task_id": task_id, "status": "completed"}
 

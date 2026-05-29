@@ -15,7 +15,7 @@ def test_embeddings_index_and_query_workflow():
         },
     )
     assert index_response.status_code == 200
-    assert index_response.json().get("ok") is True
+    assert index_response.json().get("ok") == True
 
     query_response = client.post(
         "/embeddings/query",

@@ -21,7 +21,7 @@ class SQLiteMemoryStore:
             cur = self._conn.cursor()
             cur.executescript(SCHEMA)
             self._conn.commit()
-        except Exception:
+        except Exception as exc:
             pass
 
     def save_memory(self, project_id: int, kind: str, content: str, score: float = 0.0, source: str = "agent") -> int:

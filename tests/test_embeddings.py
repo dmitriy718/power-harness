@@ -9,7 +9,7 @@ def test_embeddings_index_and_query():
     texts = ["alpha", "beta", "gamma"]
     r = client.post("/embeddings/index", json={"collection": "test_coll", "texts": texts, "project_id": 2})
     assert r.status_code == 200
-    assert r.json().get("ok") is True
+    assert r.json().get("ok") == True
 
     # query similar
     q = client.post("/embeddings/query", json={"collection": "test_coll", "query": "alpha", "top_k": 2})
