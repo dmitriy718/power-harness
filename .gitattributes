@@ -1,0 +1,23 @@
+# Auto-detect text files and normalize line endings
+* text=auto
+
+# Ensure Python files use LF on GitHub
+*.py eol=lf
+*.md text=auto eol=lf
+*.yaml text=auto eol=lf
+*.yml text=auto eol=lf
+*.ini text=auto eol=lf
+*.toml text=auto eol=lf
+*.json text=auto eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.otf binary
